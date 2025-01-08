@@ -50,9 +50,21 @@ class ScreenReader:
 class MinoDistincter:
 	COLOR_LOWER = {
 		Mino.I: (85, 128, 128),
+		Mino.L: (10, 128, 128),
+		Mino.O: (20, 128, 128),
+		Mino.Z: (170, 128, 128),
+		Mino.T: (140, 128, 128),
+		Mino.J: (105, 128, 128),
+		Mino.S: (40, 128, 128),
 	}
 	COLOR_UPPER = {
 		Mino.I: (100, 255, 255),
+		Mino.L: (15, 255, 255),
+		Mino.O: (30, 255, 255),
+		Mino.Z: (7, 255, 255),
+		Mino.T: (150, 255, 255),
+		Mino.J: (120, 255, 255),
+		Mino.S: (60, 255, 255),
 	}
 
 	def __init__(self):
@@ -60,16 +72,25 @@ class MinoDistincter:
 
 	def distinct(self, frame):
 		all_pixels = frame.size / 3 # 1pxあたり3要素
-		for i in Mino:
-			print(i)
-		mask = cv2.inRange(frame, (85, 128, 128), (100, 255, 255)) # Iミノの色
-		cv2.imwrite("hold_mask.jpg", mask)
-		if cv2.countNonZero(mask) > all_pixels * 0.10: # 10%以上がそのミノの色
-			mino = "I"
-		else:
-			mino = None
-			print("rate: ", cv2.countNonZero(mask) / all_pixels)
-		return mino
+		
+		most_similar_mino = None
+		similarity_rate = 0.15
+		for mino in Mino:
+			lower = self.COLOR_LOWER[mino]
+			upper = self.COLOR_UPPER[mino]
+			if(upper[0] < lower[0]): # 赤色の場合
+				mask_a = cv2.inRange(frame, lower, (180, 255, 255))
+				mask_b = cv2.inRange(frame, (0, 128, 128), upper)
+				mask = cv2.bitwise_or(mask_a, mask_b)
+			else:
+				mask = cv2.inRange(frame, lower, upper)
+			# cv2.imwrite("hold_mask.jpg", mask)
+			rate = cv2.countNonZero(mask) / all_pixels
+			# print(mino, ": ", rate)
+			if rate > similarity_rate: # 類似度最大
+				most_similar_mino = mino
+	
+		return most_similar_mino
 
 screenReader = ScreenReader()
 minoDistincter = MinoDistincter()
@@ -77,7 +98,7 @@ minoDistincter = MinoDistincter()
 frame = screenReader.read()
 hold_img = screenReader.get_hold(frame)
 hold_img_bgr = cv2.cvtColor(hold_img, cv2.COLOR_HSV2BGR)
-cv2.imwrite("hold.jpg", hold_img_bgr)
+# cv2.imwrite("hold.jpg", hold_img_bgr)
 
 hold_name = minoDistincter.distinct(hold_img)
 print("Hold:", hold_name)
