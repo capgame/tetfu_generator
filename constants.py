@@ -8,3 +8,5 @@ class Mino(Enum):
 	T = 5
 	J = 6
 	S = 7
+
+NEXT_COUNT = 5
