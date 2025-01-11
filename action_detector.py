@@ -10,7 +10,7 @@ class ActionDetector:
 		self.reset()
 	
 	def reset(self):
-		self.last_field = None
+		self.last_field = [[None for _ in range(FIELD_WIDTH)] for _ in range(FIELD_HEIGHT)]
 		self.last_hold = None
 		self.last_nexts = [None, None, None, None, None]
 		self.current_mino = None
@@ -21,20 +21,23 @@ class ActionDetector:
 		field_img = self.screen_reader.get_field(frame)
 		next_imgs = self.screen_reader.get_nexts(frame)
 
-		hasMinoHold, hold = self.get_hold(hold_img)
-		hasMinoPut, nexts = self.get_next(next_imgs)
+		has_mino_hold, hold = self.get_hold(hold_img)
+		has_mino_put, nexts = self.get_nexts(next_imgs)
+		self.last_nexts = nexts
 
-		if hasMinoHold:
+		if has_mino_hold:
 			if self.last_hold == None:
 				pass
 			else:
 				self.current_mino = self.last_hold
 			self.last_hold = hold
 			# return Action.HOLD, hold
-		if hasMinoPut:
-			print(self.current_mino, "was put")
+		if has_mino_put:
+			put_mino = self.current_mino
+
+			print("nexts:", nexts)
+
 			self.current_mino = self.last_nexts[0]
-			self.last_nexts = nexts
 
 		return None
 	
@@ -43,7 +46,7 @@ class ActionDetector:
 		if self.last_hold == hold:
 			return False, hold
 		return True, hold
-	def get_next(self, next_imgs) -> tuple[bool, list]: # ネクストが進んだか, ネクストのリスト
+	def get_nexts(self, next_imgs) -> tuple[bool, list]: # ネクストが進んだか, ネクストのリスト
 		raw_nexts = [] # 画像から検出したそのままのネクスト
 		for next_img in next_imgs:
 			next = MinoDistincter.distinct(next_img)
@@ -84,6 +87,7 @@ class ActionDetector:
 			next.append(raw_nexts[4])
 			return True, next
 		return True, raw_nexts # それ以外は設置とみなす
+
 	
 actionDetector = ActionDetector()
 while True:

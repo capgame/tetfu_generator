@@ -10,3 +10,6 @@ class Mino(Enum):
 	S = 7
 
 NEXT_COUNT = 5
+
+FIELD_WIDTH = 10
+FIELD_HEIGHT = 20
